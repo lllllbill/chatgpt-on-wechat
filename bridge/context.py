@@ -10,17 +10,18 @@ class ContextType(Enum):
     IMAGE_CREATE = 10  # 创建图片命令
     JOIN_GROUP = 20  # 加入群聊
     PATPAT = 21  # 拍了拍
+    NOTE = 4 #转账
 
     def __str__(self):
         return self.name
 
 
 class Context:
-    def __init__(self, type: ContextType = None, content=None, kwargs=dict()):
+    def __init__(self, type: ContextType = None, content=None, kwargs=dict(),fromUserId=None):
         self.type = type
         self.content = content
         self.kwargs = kwargs
-
+        self.fromUserId = fromUserId
     def __contains__(self, key):
         if key == "type":
             return self.type is not None

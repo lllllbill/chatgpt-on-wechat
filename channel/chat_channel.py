@@ -7,6 +7,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 
 from bridge.context import *
 from bridge.reply import *
+from .permissions.permissions import *
 from channel.channel import Channel
 from common.dequeue import Dequeue
 from common.log import logger
@@ -48,6 +49,7 @@ class ChatChannel(Channel):
         if first_in:  # context首次传入时，receiver是None，根据类型设置receiver
             config = conf()
             cmsg = context["msg"]
+            context.fromUserId = cmsg.from_user_id
             user_data = conf().get_user_data(cmsg.from_user_id)
             context["openai_api_key"] = user_data.get("openai_api_key")
             if context.get("isgroup", False):
@@ -133,8 +135,7 @@ class ChatChannel(Channel):
                 context["desire_rtype"] = ReplyType.VOICE
         elif context.type == ContextType.VOICE:
             if "desire_rtype" not in context and conf().get("voice_reply_voice") and ReplyType.VOICE not in self.NOT_SUPPORT_REPLYTYPE:
-                context["desire_rtype"] = ReplyType.VOICE
-
+                context["desire_rtype"] = ReplyType.VOICE            
         return context
 
     def _handle(self, context: Context):
@@ -161,7 +162,21 @@ class ChatChannel(Channel):
         reply = e_context["reply"]
         if not e_context.is_pass():
             logger.debug("[WX] ready to handle context: type={}, content={}".format(context.type, context.content))
-            if context.type == ContextType.TEXT or context.type == ContextType.IMAGE_CREATE:  # 文字和图片消息
+            #校验用户权限
+            if reply is not None:
+                p = permissions()
+                check =  p.check(context.fromUserId)
+                if check is None:
+                    reply = Reply(ReplyType.INFO, "无使用权限，请转账充值（直接向小助手转账即可）：20一个月，200一年")
+                if context.type == ContextType.NOTE:
+                    if context.kwargs["receiver"] is not None:
+                        pass
+                    if context.content=="收到转账20元":
+                        p.addOrUpate(context.fromUserId,"MONTH")
+                    elif context.content=="收到转账200元":
+                        p.addOrUpate(context.fromUserId,"YEAR")
+                    reply = Reply(ReplyType.INFO, "充值成功")
+            elif context.type == ContextType.TEXT or context.type == ContextType.IMAGE_CREATE:  # 文字和图片消息
                 reply = super().build_reply_content(context.content, context)
             elif context.type == ContextType.VOICE:  # 语音消息
                 cmsg = context["msg"]
@@ -223,7 +238,7 @@ class ChatChannel(Channel):
                         reply_text = conf().get("group_chat_reply_prefix", "") + reply_text
                     else:
                         reply_text = conf().get("single_chat_reply_prefix", "") + reply_text
-                    reply.content = reply_text
+                    reply.content = reply_text                    
                 elif reply.type == ReplyType.ERROR or reply.type == ReplyType.INFO:
                     reply.content = "[" + str(reply.type) + "]\n" + reply.content
                 elif reply.type == ReplyType.IMAGE_URL or reply.type == ReplyType.VOICE or reply.type == ReplyType.IMAGE:

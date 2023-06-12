@@ -8,6 +8,7 @@ class ReplyType(Enum):
     VOICE = 2  # 音频文件
     IMAGE = 3  # 图片文件
     IMAGE_URL = 4  # 图片URL
+    NOTE =4 #充值
 
     INFO = 9
     ERROR = 10

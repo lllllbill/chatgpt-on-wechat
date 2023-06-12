@@ -18,6 +18,9 @@ class WechatMessage(ChatMessage):
         if itchat_msg["Type"] == TEXT:
             self.ctype = ContextType.TEXT
             self.content = itchat_msg["Text"]
+        elif itchat_msg["Type"] == NOTE:
+             self.ctype = ContextType.NOTE
+             self.content = itchat_msg["Text"]
         elif itchat_msg["Type"] == VOICE:
             self.ctype = ContextType.VOICE
             self.content = TmpDir().path() + itchat_msg["FileName"]  # content直接存临时目录路径
