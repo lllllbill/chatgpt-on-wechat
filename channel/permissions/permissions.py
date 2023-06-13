@@ -1,6 +1,6 @@
 from config import conf
 from common.singleton import singleton
-from mySQLClient import *
+from .mySQLClient import *
 
 @singleton
 class permissions:
@@ -19,4 +19,4 @@ class permissions:
         return self.client.execute("SELECT * FROM users where user_id = '"+str(from_user_id)+"' and end_time > now()")
     
     def addOrUpate(self,from_user_id,cyclical):
-        return self.client.execute("insert into users set user_id = '"+str(from_user_id)+"',start_time = CURDATE(), end_time = DATE_ADD(CURDATE(),INTERVAL 1 "+ str(cyclical) +")  ON DUPLICATE KEY UPDATE end_time = DATE_ADD(end_time,INTERVAL 1 "+ str(cyclical) +")")
+        return self.client.executemany("insert into users set user_id = '"+str(from_user_id)+"',start_time = CURDATE(), end_time = DATE_ADD(CURDATE(),INTERVAL 1 "+ str(cyclical) +")  ON DUPLICATE KEY UPDATE end_time = DATE_ADD(end_time,INTERVAL 1 "+ str(cyclical) +")")

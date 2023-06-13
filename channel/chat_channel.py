@@ -50,6 +50,7 @@ class ChatChannel(Channel):
             config = conf()
             cmsg = context["msg"]
             context.fromUserId = cmsg.from_user_id
+            context.fromUserName = cmsg.from_user_nickname
             user_data = conf().get_user_data(cmsg.from_user_id)
             context["openai_api_key"] = user_data.get("openai_api_key")
             if context.get("isgroup", False):
@@ -135,7 +136,10 @@ class ChatChannel(Channel):
                 context["desire_rtype"] = ReplyType.VOICE
         elif context.type == ContextType.VOICE:
             if "desire_rtype" not in context and conf().get("voice_reply_voice") and ReplyType.VOICE not in self.NOT_SUPPORT_REPLYTYPE:
-                context["desire_rtype"] = ReplyType.VOICE            
+                context["desire_rtype"] = ReplyType.VOICE
+        elif context.type == ContextType.NOTE:
+            if context.fromUserId == self.user_id:
+                return None
         return context
 
     def _handle(self, context: Context):
@@ -163,20 +167,22 @@ class ChatChannel(Channel):
         if not e_context.is_pass():
             logger.debug("[WX] ready to handle context: type={}, content={}".format(context.type, context.content))
             #校验用户权限
-            if reply is not None:
-                p = permissions()
-                check =  p.check(context.fromUserId)
-                if check is None:
-                    reply = Reply(ReplyType.INFO, "无使用权限，请转账充值（直接向小助手转账即可）：20一个月，200一年")
-                if context.type == ContextType.NOTE:
-                    if context.kwargs["receiver"] is not None:
-                        pass
-                    if context.content=="收到转账20元":
-                        p.addOrUpate(context.fromUserId,"MONTH")
-                    elif context.content=="收到转账200元":
-                        p.addOrUpate(context.fromUserId,"YEAR")
+            p = permissions()
+            if context.type == ContextType.NOTE:
+                if context.content=="收到转账20.00元":
+                    p.addOrUpate(context.fromUserName,"MONTH")
                     reply = Reply(ReplyType.INFO, "充值成功")
-            elif context.type == ContextType.TEXT or context.type == ContextType.IMAGE_CREATE:  # 文字和图片消息
+                elif context.content=="收到转账200.00元":
+                    p.addOrUpate(context.fromUserName,"YEAR")
+                    reply = Reply(ReplyType.INFO, "充值成功")
+                else:
+                    reply = Reply(ReplyType.INFO, "请转账正确的金额，本次转账将会自动退回")
+                return reply
+            check =  p.check(context.fromUserName)
+            if  len(check) == 0:
+                reply = Reply(ReplyType.INFO, "无使用权限，若要使用，请充值（直接向小助手转账即可）：20一个月，200一年")
+                return reply
+            if context.type == ContextType.TEXT or context.type == ContextType.IMAGE_CREATE:  # 文字和图片消息
                 reply = super().build_reply_content(context.content, context)
             elif context.type == ContextType.VOICE:  # 语音消息
                 cmsg = context["msg"]

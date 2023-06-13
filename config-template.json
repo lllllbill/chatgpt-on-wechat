@@ -3,24 +3,18 @@
   "model": "gpt-3.5-turbo",
   "proxy": "",
   "single_chat_prefix": [
-    "bot",
-    "@bot"
+    ""
   ],
   "single_chat_reply_prefix": "[bot] ",
   "group_chat_prefix": [
     "@bot"
   ],
-  "group_name_white_list": [
-    "ChatGPT测试群",
-    "ChatGPT测试群2"
-  ],
+  "group_name_white_list": [],
   "group_chat_in_one_session": [
-    "ChatGPT测试群"
+    "ALL_GROUP"
   ],
   "image_create_prefix": [
-    "画",
-    "看",
-    "找"
+    "ai绘画"
   ],
   "speech_recognition": false,
   "group_speech_recognition": false,
@@ -31,7 +25,7 @@
   "subscribe_msg": "感谢您的关注！\n这里是ChatGPT，可以自由对话。\n支持语音对话。\n支持图片输入。\n支持图片输出，画字开头的消息将按要求创作图片。\n支持tool、角色扮演和文字冒险等丰富的插件。\n输入{trigger_prefix}#help 查看详细指令。",
   "mysql_host":"containers-us-west-191.railway.app",
   "mysql_port":6578,
-  "mysql_user":"root",
-  "mysql_password":"fsEZnsizGpaf4NykP8g5",
+  "mysql_user":"",
+  "mysql_password":"",
   "mysql_database":"railway"
 }

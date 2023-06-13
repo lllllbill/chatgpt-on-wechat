@@ -17,11 +17,12 @@ class ContextType(Enum):
 
 
 class Context:
-    def __init__(self, type: ContextType = None, content=None, kwargs=dict(),fromUserId=None):
+    def __init__(self, type: ContextType = None, content=None, kwargs=dict(),fromUserId=None,fromUserName=None):
         self.type = type
         self.content = content
         self.kwargs = kwargs
         self.fromUserId = fromUserId
+        self.fromUserName = fromUserName
     def __contains__(self, key):
         if key == "type":
             return self.type is not None

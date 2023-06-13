@@ -51,7 +51,7 @@ class mySQLClient:
             cursor.close()
             conn.close()
 
-    def executemany(self, sql, params):
+    def executemany(self, sql):
         """
         插入和更新时使用
         """
@@ -60,7 +60,7 @@ class mySQLClient:
         self.cursor = cursor
 
         try:
-            cursor.executemany(sql, params)
+            cursor.execute(sql)
             conn.commit()
         except Exception as e:
             conn.rollback()
