@@ -2,6 +2,7 @@ import os
 import re
 import threading
 import time
+import json
 from asyncio import CancelledError
 from concurrent.futures import Future, ThreadPoolExecutor
 
@@ -13,6 +14,7 @@ from common.dequeue import Dequeue
 from common.log import logger
 from config import conf
 from plugins import *
+
 
 try:
     from voice.audio_convert import any_to_wav
@@ -51,6 +53,10 @@ class ChatChannel(Channel):
             cmsg = context["msg"]
             context.fromUserId = cmsg.from_user_id
             context.fromUserName = cmsg._rawmsg.User.RemarkName
+            if cmsg._rawmsg.User.RemarkName:
+                context.fromUserName = cmsg._rawmsg.User.RemarkName
+            else:
+                 context.fromUserName = cmsg.from_user_nickname
             user_data = conf().get_user_data(cmsg.from_user_id)
             context["openai_api_key"] = user_data.get("openai_api_key")
             if context.get("isgroup", False):
@@ -178,10 +184,15 @@ class ChatChannel(Channel):
                 else:
                     reply = Reply(ReplyType.INFO, "请转账正确的金额，本次转账将会自动退回")
                 return reply
-            check =  p.check(context.fromUserName)
-            if  len(check) == 0:
-                reply = Reply(ReplyType.INFO, "无使用权限，若要使用，请充值（直接向小助手转账即可）：20一个月，200一年")
-                return reply
+            queryResult =  p.check(context.fromUserName)
+            if  len(queryResult) == 0:
+                p.addOrUpate(context.fromUserName,"DAY")
+            else:
+                nowT = time.localtime(time.time())
+                endTimeT = time.strptime(queryResult[0]["end_time"],'%Y-%m-%d %H:%M:%S')
+                if(endTimeT < nowT):
+                    reply = Reply(ReplyType.INFO, "无使用权限，若要使用，请充值（直接向小助手转账即可）：20元一个月，200元一年")
+                    return reply
             if context.type == ContextType.TEXT or context.type == ContextType.IMAGE_CREATE:  # 文字和图片消息
                 reply = super().build_reply_content(context.content, context)
             elif context.type == ContextType.VOICE:  # 语音消息

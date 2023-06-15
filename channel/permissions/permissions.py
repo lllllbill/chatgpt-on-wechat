@@ -16,7 +16,7 @@ class permissions:
         )
 
     def check(self,from_user_id):
-        return self.client.execute("SELECT * FROM users where user_id = '"+str(from_user_id)+"' and end_time > now()")
+        return self.client.execute("SELECT end_time FROM users where user_id = '"+str(from_user_id)+"'")
     
     def addOrUpate(self,from_user_id,cyclical):
         return self.client.executemany("insert into users set user_id = '"+str(from_user_id)+"',start_time = CURDATE(), end_time = DATE_ADD(CURDATE(),INTERVAL 1 "+ str(cyclical) +")  ON DUPLICATE KEY UPDATE end_time = DATE_ADD(end_time,INTERVAL 1 "+ str(cyclical) +")")
