@@ -3,6 +3,7 @@ import re
 import threading
 import time
 import json
+import re
 from asyncio import CancelledError
 from concurrent.futures import Future, ThreadPoolExecutor
 
@@ -181,8 +182,10 @@ class ChatChannel(Channel):
                 elif context.content=="收到转账200.00元":
                     p.addOrUpate(context.fromUserName,"YEAR")
                     reply = Reply(ReplyType.INFO, "充值成功")
-                else:
+                elif re.match("收到转账",context.content):
                     reply = Reply(ReplyType.INFO, "请转账正确的金额，本次转账将会自动退回")
+                else:
+                    return None
                 return reply
             queryResult =  p.check(context.fromUserName)
             if  len(queryResult) == 0:
